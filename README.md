@@ -97,4 +97,4 @@ This means you can edit files in this repo and changes take effect immediately (
 
 ## Credit
 
-Based on [jplhughes/dotfiles](https://github.com/jplhughes/dotfiles).
+Based on [jplhughes/dotfiles](https://github.com/jplhughes/dotfiles) and [andyrdt/dotfiles](https://github.com/andyrdt/dotfiles).
