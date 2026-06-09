@@ -1,0 +1,37 @@
+# Minimal active zsh setup.
+
+path_prepend() {
+  case ":$PATH:" in
+    *":$1:"*) ;;
+    *) export PATH="$1:$PATH" ;;
+  esac
+}
+
+if [ -d "/opt/homebrew/bin" ]; then
+  path_prepend "/opt/homebrew/bin"
+fi
+
+path_prepend "$HOME/.local/bin"
+
+if [ -f "$HOME/.cargo/env" ]; then
+  source "$HOME/.cargo/env"
+fi
+
+if command -v starship >/dev/null 2>&1; then
+  eval "$(starship init zsh)"
+fi
+
+if [ -f "/opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh" ]; then
+  source "/opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh"
+fi
+
+CONFIG_FILE="${(%):-%x}"
+if [ -L "$CONFIG_FILE" ]; then
+  CONFIG_FILE="$(readlink "$CONFIG_FILE")"
+fi
+CONFIG_DIR="$(cd "$(dirname "$CONFIG_FILE")" && pwd)"
+if [ -f "$CONFIG_DIR/local.zsh" ]; then
+  source "$CONFIG_DIR/local.zsh"
+fi
+unset CONFIG_DIR CONFIG_FILE
+unset -f path_prepend

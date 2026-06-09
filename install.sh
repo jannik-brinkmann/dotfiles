@@ -1,157 +1,72 @@
-#!/bin/bash
-# Main installation script - sets up terminal and tools
-# Usage: ./install.sh
+#!/usr/bin/env bash
+# Link this repo's active configuration files into the home directory.
 
-# Exit on any error, undefined variables, or pipe failures
 set -euo pipefail
 
-# Get the directory where this script is located
-SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+BACKUP_DIR="$HOME/.dotfiles-backup/$(date +%Y%m%d-%H%M%S)"
 
-echo "========================================="
-echo "  Minimal Dotfiles Setup"
-echo "========================================="
-echo ""
+backup_path() {
+  local target="$1"
+  local rel="${target#$HOME/}"
+  printf '%s/%s\n' "$BACKUP_DIR" "$rel"
+}
 
-# Detect operating system (Linux or Mac)
-operating_system="$(uname -s)"
-case "${operating_system}" in
-    Linux*)     machine=Linux;;
-    Darwin*)    machine=Mac;;
-    *)          echo "Error: Unsupported OS" && exit 1
-esac
+link_file() {
+  local source="$1" target="$2"
 
-echo "OS: $machine"
-echo ""
+  mkdir -p "$(dirname "$target")"
 
-# Check if basic tools are installed, install if missing
-echo "Checking for zsh, curl, git..."
-missing_tools=()
-command -v zsh &> /dev/null || missing_tools+=("zsh")
-command -v curl &> /dev/null || missing_tools+=("curl")
-command -v git &> /dev/null || missing_tools+=("git")
+  if [ -L "$target" ] && [ "$(readlink "$target")" = "$source" ]; then
+    printf 'Already linked: %s\n' "$target"
+    return
+  fi
 
-if [ ${#missing_tools[@]} -eq 0 ]; then
-    echo "All required tools are already installed!"
-else
-    echo "Missing tools: ${missing_tools[*]}"
-    echo "Attempting to install..."
+  if [ -e "$target" ] || [ -L "$target" ]; then
+    local backup
+    backup="$(backup_path "$target")"
+    mkdir -p "$(dirname "$backup")"
+    mv "$target" "$backup"
+    printf 'Backed up %s -> %s\n' "$target" "$backup"
+  fi
 
-    if [ "$machine" == "Linux" ]; then
-        # Try with sudo, but warn if it fails
-        if sudo -n true 2>/dev/null; then
-            sudo apt-get update -y
-            sudo apt-get install -y "${missing_tools[@]}"
-        else
-            echo "Warning: sudo access required to install missing tools."
-            echo "Please ask your system administrator to install: ${missing_tools[*]}"
-            echo "Or install them manually in your user directory."
-            exit 1
-        fi
-    elif [ "$machine" == "Mac" ]; then
-        # Install via homebrew (Mac package manager)
-        brew install "${missing_tools[@]}"
+  ln -s "$source" "$target"
+  printf 'Linked %s -> %s\n' "$target" "$source"
+}
+
+write_gitconfig() {
+  local target="$HOME/.gitconfig"
+  local local_config="$SCRIPT_DIR/config/git/gitconfig.local"
+
+  touch "$local_config"
+
+  if [ -e "$target" ] || [ -L "$target" ]; then
+    if grep -qF "$SCRIPT_DIR/config/git/gitconfig" "$target" 2>/dev/null; then
+      printf 'Already configured: %s\n' "$target"
+      return
     fi
-fi
 
-# Install oh-my-zsh (zsh framework)
-if [ ! -d "$HOME/.oh-my-zsh" ]; then
-    echo ""
-    echo "Installing oh-my-zsh..."
-    sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
-fi
+    local backup
+    backup="$(backup_path "$target")"
+    mkdir -p "$(dirname "$backup")"
+    mv "$target" "$backup"
+    printf 'Backed up %s -> %s\n' "$target" "$backup"
+  fi
 
-# Install powerlevel10k theme (makes terminal look nice)
-P10K_DIR="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k"
-if [ ! -d "$P10K_DIR" ]; then
-    echo ""
-    echo "Installing powerlevel10k theme..."
-    git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "$P10K_DIR"
-fi
+  cat > "$target" <<EOF
+[include]
+	path = $SCRIPT_DIR/config/git/gitconfig
+[include]
+	path = $local_config
+EOF
+  printf 'Wrote %s\n' "$target"
+}
 
-# Install Claude Code CLI if not already installed
-if ! command -v claude &> /dev/null; then
-    echo ""
-    echo "Installing Claude Code..."
-    curl -LsSf https://claude.ai/install.sh | bash
-fi
+link_file "$SCRIPT_DIR/config/zsh/zshrc" "$HOME/.zshrc"
+link_file "$SCRIPT_DIR/config/aerospace/aerospace.toml" "$HOME/.aerospace.toml"
+link_file "$SCRIPT_DIR/config/ghostty/config" "$HOME/.config/ghostty/config"
+link_file "$SCRIPT_DIR/config/starship/starship.toml" "$HOME/.config/starship.toml"
+write_gitconfig
 
-# Install Cursor CLI agent if not already installed
-# Check for its install directory (not `command -v agent` which is too generic a name)
-if [ ! -d "$HOME/.local/share/cursor-agent" ]; then
-    echo ""
-    echo "Installing Cursor CLI..."
-    curl -fsSL https://cursor.com/install | bash
-fi
+printf '\nDone. Restart your shell, or run: exec zsh\n'
 
-# Install uv (fast Python package installer) if not already installed
-if ! command -v uv &> /dev/null; then
-    echo ""
-    echo "Installing uv..."
-    curl -LsSf https://astral.sh/uv/install.sh | sh
-fi
-
-# Install HuggingFace CLI using uv
-# Check if uv is available (either in PATH or just installed)
-if command -v uv &> /dev/null; then
-    UV_CMD="uv"
-elif [ -f "$HOME/.local/bin/uv" ]; then
-    UV_CMD="$HOME/.local/bin/uv"
-else
-    echo ""
-    echo "Warning: uv not found, skipping HuggingFace CLI installation"
-    echo "After restarting your shell, run: uv tool install 'huggingface_hub[cli]'"
-    UV_CMD=""
-fi
-
-if [ -n "$UV_CMD" ]; then
-    echo ""
-    echo "Installing HuggingFace CLI..."
-    "$UV_CMD" tool install "huggingface_hub[cli]"
-fi
-
-# Install fnm (Node version manager) if not already installed
-FNM_DIR="$HOME/.local/share/fnm"
-
-if ! command -v fnm &> /dev/null; then
-    echo ""
-    echo "Installing fnm..."
-    curl -fsSL https://fnm.vercel.app/install | bash -s -- --skip-shell
-fi
-
-if [ -d "$FNM_DIR" ]; then
-    export PATH="$FNM_DIR:$PATH"
-    eval "$(fnm env --shell bash)"
-fi
-
-# Install Node 20 LTS
-if command -v fnm &> /dev/null; then
-    echo ""
-    echo "Installing Node 20..."
-    fnm install 20
-    fnm default 20
-fi
-
-# Install pnpm (Node package manager) if not already installed
-if ! command -v pnpm &> /dev/null; then
-    echo ""
-    echo "Installing pnpm..."
-    curl -fsSL https://get.pnpm.io/install.sh | sh -
-fi
-
-# Ensure PNPM_HOME is set (needed for global installs even if pnpm was already installed)
-export PNPM_HOME="$HOME/.local/share/pnpm"
-export PATH="$PNPM_HOME:$PATH"
-
-# Install OpenAI Codex using pnpm
-source "$SCRIPT_DIR/config/pnpm_nfs_check.sh"
-if check_stale_pnpm_processes; then
-    echo ""
-    echo "Installing OpenAI Codex..."
-    pnpm install -g @openai/codex
-else
-    echo "Skipped OpenAI Codex install."
-fi
-
-echo ""
-echo "Done! Run ./deploy.sh next"

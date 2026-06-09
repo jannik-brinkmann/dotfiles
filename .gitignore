@@ -1,0 +1,14 @@
+.DS_Store
+*.log
+
+# Local/private overrides.
+config/zsh/local.zsh
+config/git/gitconfig.local
+
+# Tool auth/state that should never be committed.
+.claude/
+.codex/
+.codex-profiles/
+CodexProfiles/
+MultiCliProfiles/
+

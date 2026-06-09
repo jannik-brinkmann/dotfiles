@@ -1,0 +1,13 @@
+[user]
+	name = jannik-brinkmann
+	email = jannik.brinkmann@gmail.com
+[filter "lfs"]
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true
+[http]
+	version = HTTP/1.1
+[core]
+	editor = nano
+

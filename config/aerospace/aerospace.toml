@@ -1,0 +1,131 @@
+# AeroSpace config focused on 3-5 window tiling on an ultrawide display.
+
+config-version = 2
+
+start-at-login = true
+
+# Keep the layout tree predictable.
+enable-normalization-flatten-containers = true
+enable-normalization-opposite-orientation-for-nested-containers = true
+
+# Accordion is still available via alt-comma, but tiles are the default.
+accordion-padding = 30
+default-root-container-layout = 'tiles'
+default-root-container-orientation = 'horizontal'
+
+# Keep the core workspace set available even when empty.
+persistent-workspaces = ['0', '1', '2', '3', '4', '5']
+
+[key-mapping]
+    preset = 'qwerty'
+
+[gaps]
+    inner.horizontal = 0
+    inner.vertical = 0
+    outer.left = 0
+    outer.bottom = 0
+    outer.top = 0
+    outer.right = 0
+
+[mode.main.binding]
+    # Layouts
+    alt-slash = 'layout h_tiles'
+    alt-comma = 'layout h_accordion'
+    alt-shift-space = 'layout floating tiling'
+
+    # Your main sizing workflow:
+    # alt-sectionSign resets tiled windows to equal sizes.
+    # alt-shift-minus/equal are large nudges for roughly 1/3 and 2/3.
+    alt-sectionSign = 'balance-sizes'
+    alt-minus = 'resize smart -100'
+    alt-equal = 'resize smart +100'
+    alt-shift-minus = 'resize smart -300'
+    alt-shift-equal = 'resize smart +300'
+    alt-r = 'mode resize'
+
+    # Focus windows
+    alt-h = 'focus left'
+    alt-j = 'focus down'
+    alt-k = 'focus up'
+
+    # Move windows
+    alt-shift-h = 'move left'
+    alt-shift-j = 'move down'
+    alt-shift-k = 'move up'
+    alt-shift-l = 'move right'
+
+    # Fullscreen without using macOS native fullscreen.
+    alt-f = 'fullscreen'
+
+    # Workspaces
+    alt-0 = 'workspace 0'
+    alt-1 = 'workspace 1'
+    alt-2 = 'workspace 2'
+    alt-3 = 'workspace 3'
+    alt-4 = 'workspace 4'
+    alt-5 = 'workspace 5'
+
+    alt-shift-0 = 'move-node-to-workspace 0'
+    alt-shift-1 = 'move-node-to-workspace 1'
+    alt-shift-2 = 'move-node-to-workspace 2'
+    alt-shift-3 = 'move-node-to-workspace 3'
+    alt-shift-4 = 'move-node-to-workspace 4'
+    alt-shift-5 = 'move-node-to-workspace 5'
+
+    alt-tab = 'workspace-back-and-forth'
+    alt-shift-tab = 'move-workspace-to-monitor --wrap-around next'
+
+    # Utility mode
+    alt-shift-semicolon = 'mode service'
+
+[mode.resize.binding]
+    esc = 'mode main'
+    enter = 'mode main'
+    0 = ['balance-sizes', 'mode main']
+
+    h = 'resize smart -100'
+    l = 'resize smart +100'
+    shift-h = 'resize smart -300'
+    shift-l = 'resize smart +300'
+
+    j = 'resize smart-opposite -100'
+    k = 'resize smart-opposite +100'
+    shift-j = 'resize smart-opposite -300'
+    shift-k = 'resize smart-opposite +300'
+
+[mode.service.binding]
+    esc = ['reload-config', 'mode main']
+    r = ['flatten-workspace-tree', 'mode main']
+    b = ['balance-sizes', 'mode main']
+    f = ['layout floating tiling', 'mode main']
+    backspace = ['close-all-windows-but-current', 'mode main']
+
+    alt-shift-h = ['join-with left', 'mode main']
+    alt-shift-j = ['join-with down', 'mode main']
+    alt-shift-k = ['join-with up', 'mode main']
+    alt-shift-l = ['join-with right', 'mode main']
+
+# Keep focused workspaces predictable while leaving 2 and 3 flexible.
+[[on-window-detected]]
+    if.app-id = 'com.mitchellh.ghostty'
+    run = 'move-node-to-workspace 1'
+
+[[on-window-detected]]
+    if.app-id = 'com.microsoft.VSCode'
+    run = 'move-node-to-workspace 1'
+
+[[on-window-detected]]
+    if.app-id = 'com.tinyspeck.slackmacgap'
+    run = 'move-node-to-workspace 4'
+
+[[on-window-detected]]
+    if.app-id = 'com.hnc.Discord'
+    run = 'move-node-to-workspace 4'
+
+[[on-window-detected]]
+    if.app-id = 'com.apple.mail'
+    run = 'move-node-to-workspace 5'
+
+[[on-window-detected]]
+    if.app-id = 'com.microsoft.teams2'
+    run = 'move-node-to-workspace 5'
