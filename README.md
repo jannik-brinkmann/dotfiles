@@ -19,8 +19,11 @@ Private or machine-specific config is intentionally ignored:
 ## Install
 
 ```bash
+brew bundle --file Brewfile
 ./install.sh
 ```
+
+The `Brewfile` installs the command-line tools and apps used by this setup. A few larger quality-of-life apps are listed but commented out until you want Homebrew to manage them.
 
 The installer links most tracked configs into the locations the tools expect:
 
@@ -51,6 +54,7 @@ Example local Git credential setting:
 ## New Laptop Checklist
 
 1. Clone this repo.
-2. Install the apps/tools you want, such as AeroSpace, Ghostty, Starship, and zsh-autosuggestions.
-3. Run `./install.sh`.
-4. Recreate ignored local files and log into tools manually.
+2. Install Homebrew if it is not present.
+3. Run `brew bundle --file Brewfile`.
+4. Run `./install.sh`.
+5. Recreate ignored local files and log into tools manually.
