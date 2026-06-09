@@ -22,12 +22,13 @@ Private or machine-specific config is intentionally ignored:
 ./install.sh
 ```
 
-The installer links the tracked configs into the locations the tools expect:
+The installer links most tracked configs into the locations the tools expect:
 
 - `~/.zshrc`
-- `~/.aerospace.toml`
 - `~/.config/ghostty/config`
 - `~/.config/starship.toml`
+
+It copies AeroSpace to `~/.aerospace.toml` instead of symlinking it, because the GUI app may fall back to default bindings when its config is a symlink into `Documents/`.
 
 For Git, it writes a small `~/.gitconfig` that includes the tracked config and ignored local config. Existing files are backed up under `~/.dotfiles-backup/<timestamp>/` before being replaced.
 
@@ -53,4 +54,3 @@ Example local Git credential setting:
 2. Install the apps/tools you want, such as AeroSpace, Ghostty, Starship, and zsh-autosuggestions.
 3. Run `./install.sh`.
 4. Recreate ignored local files and log into tools manually.
-

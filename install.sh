@@ -34,6 +34,28 @@ link_file() {
   printf 'Linked %s -> %s\n' "$target" "$source"
 }
 
+copy_file() {
+  local source="$1" target="$2"
+
+  mkdir -p "$(dirname "$target")"
+
+  if [ ! -L "$target" ] && [ -f "$target" ] && cmp -s "$source" "$target"; then
+    printf 'Already copied: %s\n' "$target"
+    return
+  fi
+
+  if [ -e "$target" ] || [ -L "$target" ]; then
+    local backup
+    backup="$(backup_path "$target")"
+    mkdir -p "$(dirname "$backup")"
+    mv "$target" "$backup"
+    printf 'Backed up %s -> %s\n' "$target" "$backup"
+  fi
+
+  cp "$source" "$target"
+  printf 'Copied %s -> %s\n' "$source" "$target"
+}
+
 write_gitconfig() {
   local target="$HOME/.gitconfig"
   local local_config="$SCRIPT_DIR/config/git/gitconfig.local"
@@ -63,10 +85,9 @@ EOF
 }
 
 link_file "$SCRIPT_DIR/config/zsh/zshrc" "$HOME/.zshrc"
-link_file "$SCRIPT_DIR/config/aerospace/aerospace.toml" "$HOME/.aerospace.toml"
+copy_file "$SCRIPT_DIR/config/aerospace/aerospace.toml" "$HOME/.aerospace.toml"
 link_file "$SCRIPT_DIR/config/ghostty/config" "$HOME/.config/ghostty/config"
 link_file "$SCRIPT_DIR/config/starship/starship.toml" "$HOME/.config/starship.toml"
 write_gitconfig
 
 printf '\nDone. Restart your shell, or run: exec zsh\n'
-

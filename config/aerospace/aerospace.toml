@@ -83,9 +83,7 @@ persistent-workspaces = ['0', '1', '2', '3', '4', '5']
     0 = ['balance-sizes', 'mode main']
 
     h = 'resize smart -100'
-    l = 'resize smart +100'
     shift-h = 'resize smart -300'
-    shift-l = 'resize smart +300'
 
     j = 'resize smart-opposite -100'
     k = 'resize smart-opposite +100'
